@@ -10,15 +10,25 @@ from langgraph.graph import START , END , StateGraph , MessageState
 from langgraph.prebuilt import ToolNode , tools_condition
 
 class GraphBuilder ():
-    def __init__(self) : 
-        self.tools = [
-            WeatherInfoTool(),
-            PlaceSearchTool(),
-            CalculatorTool(),
-            CurrencyCnverterTool()
-        ]
+    def __init__(self,model_provider:str = "groq") : 
+        self.tools = []
+        self.weather_tools = WeatherInfoTool()
+        self.place_search_tool = PlaceSearchTool()
+        self.calculator_tool = CalculatorTool()
+        self.currency_converter_tool = CurrencyCnverterTool()
+
+        self.tools.extend([
+            * self.weather_tools.weather_tool_list,
+            * self.place_search_tool.place_search_tool_list,
+            * self.currency_converter_tool.currency_converter_tool_list,
+            * self.calculator_tool.calculator_tool_list])
+        
         self.System_prompt = System_prompt
-        self.llm_with_tools = ModelLoader().load_llm()
+        self.model_loader = ModelLoader(model_provider=model_provider)
+        self.llm = self.model_loader.load_llm()
+        self.llm_with_tools = self.llm.bind_tools(tools=self.tools)
+
+        self.graph = None
 
     def agent_function(self,state:MessageState):
         """Main Agent Function"""
