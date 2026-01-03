@@ -4,9 +4,9 @@ from prompt_library.prompt import System_prompt
 from tools.weather_info import WeatherInfoTool
 from tools.place_search import PlaceSearchTool
 from tools.calculator import CalculatorTool
-from tools.currency_conversions import CurrencyCnverterTool
+from tools.currency_conversions import CurrencyConverterTool
 
-from langgraph.graph import START , END , StateGraph , MessageState
+from langgraph.graph import START , END , StateGraph , MessagesState
 from langgraph.prebuilt import ToolNode , tools_condition
 
 class GraphBuilder():
@@ -19,7 +19,7 @@ class GraphBuilder():
         self.weather_tools = WeatherInfoTool()
         self.place_search_tools = PlaceSearchTool()
         self.calculator_tools = CalculatorTool()
-        self.currency_converter_tools = CurrencyCnverterTool()
+        self.currency_converter_tools = CurrencyConverterTool()
         
         self.tools.extend([* self.weather_tools.weather_tool_list, 
                            * self.place_search_tools.place_search_tool_list,
@@ -33,14 +33,14 @@ class GraphBuilder():
         self.system_prompt = System_prompt
     
     
-    def agent_function(self,state: MessageState):
+    def agent_function(self,state: MessagesState):
         """Main agent function"""
         user_question = state["messages"]
         input_question = [self.system_prompt] + user_question
         response = self.llm_with_tools.invoke(input_question)
         return {"messages": [response]}
     def build_graph(self):
-        graph_builder=StateGraph(MessageState)
+        graph_builder=StateGraph(MessagesState)
         graph_builder.add_node("agent", self.agent_function)
         graph_builder.add_node("tools", ToolNode(tools=self.tools))
         graph_builder.add_edge(START,"agent")
